@@ -2,8 +2,8 @@ import numpy as np
 from itertools import product
 import re
 import unicodedata
-import numpy as np
 import sympy as sp
+
 
 def eh_invertivel(matriz):
     det = np.linalg.det(matriz)
@@ -52,26 +52,22 @@ def substituir_por_letra(numero):
         return letra
     else:
         return ""
+    
+def verifica_porcentagem_a(texto):
+    total_caracteres = len(texto)
+    total_a = texto.count('a')
+
+    porcentagem_a = (total_a / total_caracteres) * 100
+
+    if porcentagem_a >= 10:
+        return True
+    else:
+        return False
 
 
-with open('EP_Seguranca_informacao\Texto_conhecido\Cifrado\Hill\Grupo07_texto_cifrado.txt','r') as arquivo:
+with open('EP_Seguranca_informacao\Texto_desconhecido\Cifrado\Hill\Grupo07_texto_cifrado.txt','r') as arquivo:
     texto_cifrado = arquivo.read()
     tam_texto_cifrado = len(texto_cifrado)
-
-with open('EP_Seguranca_informacao\Texto_conhecido\Cifrado\Hill\policarpo_quaresma.txt', 'r', encoding='utf-8') as arquivo:
-    policarpo_quaresma = arquivo.read()
-
-    # transforma as letras em minúsculas
-    policarpo_quaresma = policarpo_quaresma.lower()
-
-    # remove os acentos das vogais
-    policarpo_quaresma = remover_acentos(policarpo_quaresma)
-
-    # remove todos os caracteres que não são letras
-    policarpo_quaresma = re.sub(r'[^a-z]', '', policarpo_quaresma)
-
-with open('EP_Seguranca_informacao\Texto_conhecido\Cifrado\Hill\policarpo_analise.txt','w', encoding='utf-8') as arquivo_saida:
-    arquivo_saida.write(policarpo_quaresma)
 
 # pelo GeraEP1.py -> a matriz para a encriptação é 2 x 2)
 matrizes = list(product(range(26), repeat=4))
@@ -84,11 +80,12 @@ for matriz in matrizes:
         matrizes_invertiveis.append(matriz)
 
 
-#decripta e verifica se esta no texto
+# decripta e verifica se esta no texto
 indice = 0
 numeros_encriptado = substituir_por_posicao(texto_cifrado)
 texto_decriptado = ''
 numeros_decriptado = []
+textos_para_analise = []
 for matriz in matrizes_invertiveis:
     for i in range(0, 100, 2):
         if (i == 0):
@@ -97,25 +94,46 @@ for matriz in matrizes_invertiveis:
             matriz_bloco = np.array([[numeros_encriptado[i], numeros_encriptado[i + 1]]])
         produto = np.dot(matriz_bloco, matriz)
         produto = produto[0].tolist()
-        produto_modulo = list(map(lambda x: calcula_mod_26(x), produto))
+        produto_modulo = list(map(lambda x: x % 26, produto))
         primeiro_caract = substituir_por_letra(produto_modulo[0])
         segundo_caract = substituir_por_letra(produto_modulo[1])
         texto_decriptado = texto_decriptado + primeiro_caract + segundo_caract
-    print(texto_decriptado)
-    if(texto_decriptado in policarpo_quaresma and len(texto_decriptado) == len(texto_cifrado)):
+    if('de' in texto_decriptado) and ('y' not in texto_decriptado) and('w' not in texto_decriptado) \
+        and('k' not in texto_decriptado):
+        textos_para_analise.append(texto_decriptado)
+        print(matriz)
+        print(texto_decriptado)
+    texto_decriptado=''
 
-        print('Este é o trecho decriptado:', texto_decriptado)
-        print('Esta é a matriz que gerou', matriz)
-        break
-    else:
-        texto_decriptado = ''
 
-# Este é o trecho decriptado: oporemtaocoherentecomellemesmotaodeaccordocomasubstanciadavidaqueellemesmofabricaraqueselimitouasorr
-# Esta é a matriz que gerou [(15, 0), (6, 9)]
-# encripta novamente para conferir
-# matriz_inversa_chave = [[15,0], [6,9]]
-# matriz_chave = converte_matriz_to_int(inverso_modulo26(matriz_inversa_chave)) 
-# numeros_encriptado = substituir_por_posicao('oporemtaocoherentecomellemesmotaodeaccordocomasubstanciadavidaqueellemesmofabricaraqueselimitouasorr')
+'''
+sisauqeeauamarivhnmaifacdndominiiuadesedmsrolazidasala
+meodemacinmsjoroaniltsciqoeuatdopereotueivfanu
+sisauqeeauamarivhamaifacdadbminviuadesedmsrblnzvdnsaln
+meodemacinmsjbrbaniltfciqoeuatdbprrrotueivfnnh
+isasqueeuamaravinhamficandodiminuidasedesmoralizadasal
+emdomecanismojornalisticoquetaodepertoeuviafun
+isasqueeuamarnvvnuamfvcanqodiminuidnsedrsmoralizadasal
+emdbmecanvsmojornnlvsticoquetnodepertbeuvvafun
+isasqueeuamaraviahamficaadbdimvnuidasedesmbrnlvzndasnl
+emdomecanismbjbrnalifticoquetabdrprrtoeuvinfhn
+sisauqeeauamnrvvunmavfacqndominiiundesrdmsrolazidasala
+mebdemacvnmsjoronnvltsciqoeuntdoperebtuevvfanu
+sisauqeeauamnrvvuamavfacqadbminviundesrdmsrblnzvdnsaln
+mebdemacvnmsjbrbnnvltfciqoeuntdbprrrbtuevvfnnh
+
+isasqueeuamaravinhamficandodiminuidasedesmoralizadasalemdomecanismojornalisticoquetaodepertoeuviafun - lima barreto - recordacoes
+do escrivao isaias caminha
+
+foi feita analisando que o digrama 'de' é um dos mais comuns na língua portuguesa, e excluindo as letras k, y, w. Pois estas 
+são as que menos aparecem em textos de português.
+'''
+
+# # encripta novamente para conferir
+# matriz_inversa_chave = [[3,3], [16,13]]
+# # esta foi calculada a mão
+# matriz_chave = [[13, 9], [22, 17]]
+# numeros_encriptado = substituir_por_posicao('isasqueeuamaravinhamficandodiminuidasedesmoralizadasalemdomecanismojornalisticoquetaodepertoeuviafun')
 # texto_encriptado = ''
 # for i in range(0, 100, 2):
 #     if (i == 0):
